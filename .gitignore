@@ -1,4 +1,27 @@
-.settings
+# Eclipse
 .project
 .classpath
-/.tern-project
+.settings/
+
+# IntelliJ
+.idea
+*.ipr
+*.iml
+*.iws
+
+# NetBeans
+nb-configuration.xml
+
+# Visual Studio Code
+.vscode
+.factorypath
+
+# OSX
+.DS_Store
+
+# Vim
+*.swp
+*.swo
+
+# Linux directory decorations
+/.directory

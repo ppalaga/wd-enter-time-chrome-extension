@@ -1,6 +1,59 @@
 const timeEntries = [
-    {label: "AM", in: "8:30", out: "12:00", outReason: "Meal"},
-    {label: "PM", in: "12:30", out: "17:00", outReason: "Out"},
+    {
+        label: "8h",
+        fields: [
+            {
+                key: "Hours",
+                value: "8",
+                fillFunction: fillInput
+            },
+            {
+                key: "Comment",
+                value: "foo",
+                fillFunction: fillInput
+            }
+        ]
+    },
+    {
+        label: "AM",
+        fields: [
+            {
+                key: "In",
+                value: "8:30",
+                fillFunction: fillInput
+            },
+            {
+                key: "Out",
+                value: "12:00",
+                fillFunction: fillInput
+            },
+            {
+                key: "Out Reason",
+                value: "Meal",
+                fillFunction: fillCombo
+            }
+        ]
+    },
+    {
+        label: "PM",
+        fields: [
+            {
+                key: "In",
+                value: "12:30",
+                fillFunction: fillInput
+            },
+            {
+                key: "Out",
+                value: "17:00",
+                fillFunction: fillInput
+            },
+            {
+                key: "Out Reason",
+                value: "Out",
+                fillFunction: fillCombo
+            }
+        ]
+    }
 ];
 
 function findLabel(labelText) {
@@ -16,6 +69,10 @@ function findLabel(labelText) {
 function findInput(labelText) {
     var label = findLabel(labelText);
     if (label) {
+        var input = document.getElementById(label['htmlFor']);
+        if (input) {
+            return input;
+        }
         var input = document.evaluate(
                 "//*[@aria-labelledby='"+ label.id +"']",
                 label.parentElement.parentElement,
@@ -30,14 +87,25 @@ function findInput(labelText) {
 
 function fillInput(labelText, value) {
     var input = findInput(labelText);
+    console.log("Found input ");
+    console.log(input);
     if (input) {
-        input.value = value;
+        for (var i = 0; i < value.length; i++) {
+            console.log("pressing " + value.charAt(i));
+            input.dispatchEvent(new KeyboardEvent('keydown', {key: value.charAt(i), keyCode: value.charCodeAt(i), isTrusted: true}));
+//            input.dispatchEvent(new KeyboardEvent('keyup', {'key': value.charAt(i), code: "Numpad8"}));
+//            input.dispatchEvent(new KeyboardEvent('keypress', {'key': value.charAt(i), code: "Numpad8"}));
+        }
+        console.log("Input value = " + input.value);
+
         return input;
     }
 }
 
 function fillCombo(labelText, value) {
     const input = findInput(labelText);
+    console.log("Found input ");
+    console.log(input);
     if (input) {
         const selectedOption = document.evaluate(
                 "//div[@data-automation-id='selectSelectedOption']",
@@ -63,15 +131,19 @@ function findDialog(element) {
 
 function autofill(timeEntryIndex) {
     const timeEntry = timeEntries[timeEntryIndex];
-
-    const outReason = fillCombo("Out Reason", timeEntry.outReason);
-    const inInput = fillInput("In", timeEntry.in);
-    const outInput = fillInput("Out", timeEntry.out);
-    inInput.focus();
-    outInput.focus();
-    outReason.focus();
-    inInput.focus();
-    const dialog = findDialog(outInput);
+    var firstField;
+    for (const fld of timeEntry.fields) {
+        const func = fld.fillFunction;
+        const field = func(fld.key, fld.value);
+        field.focus();
+        if (!firstField) {
+            firstField = field;
+        }
+    }
+    if (firstField) {
+        firstField.focus();
+    }
+    const dialog = findDialog(firstField);
     if (dialog) {
         const okButton = document.evaluate(
                 "//button[@title='OK']",
